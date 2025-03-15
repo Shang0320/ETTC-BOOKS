@@ -29,7 +29,7 @@ def load_data():
         
         # 打開工作表 - 使用工作表 URL 或名稱
         spreadsheet_url = st.secrets["spreadsheet_url"]  # 從 Streamlit 的 secrets 管理中獲取
-        sheet = client.open_by_url(spreadsheet_url).worksheet("Sheet1")  # 假設你的數據在 "Sheet1" 工作表
+        sheet = client.open_by_url(spreadsheet_url).worksheet("1")  # 假設你的數據在 "Sheet1" 工作表
         
         # 讀取資料為 DataFrame
         df = get_as_dataframe(sheet, evaluate_formulas=True, skiprows=0)
