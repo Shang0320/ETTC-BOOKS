@@ -5,8 +5,15 @@ from google.oauth2.service_account import Credentials
 from gspread_dataframe import get_as_dataframe
 
 # 設定頁面標題和版面
-st.set_page_config(page_title="海事論文查詢系統", layout="wide")
-st.title("海事論文查詢系統")
+st.set_page_config(page_title="教測中心圖書查詢系統", layout="wide")
+
+# 利用 st.columns 將 LOGO 與標題並排
+col1, col2 = st.columns([1,4])
+with col1:
+    # 使用直接連結載入 LOGO 圖片，請確認圖片權限設為公開
+    st.image("https://drive.google.com/uc?export=view&id=1l957k8q4yEQL9vxDPg18PVQQUjja-t2J", width=120)
+with col2:
+    st.title("海巡署教育訓練測考中心圖書查詢系統")
 
 # 定義函數從 Google Sheets 讀取資料
 @st.cache_data(ttl=600)  # 快取 10 分鐘
@@ -26,9 +33,8 @@ def load_data():
         client = gspread.authorize(credentials)
         
         # 直接硬編碼 Google Sheets URL（請根據您的試算表調整 URL）
-        #spreadsheet_url = st.secrets["spreadsheet_url"] 
         spreadsheet_url = "https://docs.google.com/spreadsheets/d/1R6OM-Mp9KES7FOKOgxlSseK9tfgPbBt3_moINKF8DAQ/edit?usp=sharing"
-        # 打開工作表（假設數據存放在 "sheet1" 工作表中）
+        # 打開工作表（假設數據存放在 "Sheet1" 工作表中）
         sheet = client.open_by_url(spreadsheet_url).worksheet("Sheet1")
         
         # 讀取資料到 DataFrame
@@ -119,7 +125,7 @@ else:
         st.write(f"進階篩選後，共有 {len(df_filtered)} 筆論文")
         st.dataframe(df_filtered)
     
-    # 顯示其他資訊（例如統計圖表）
+    # 顯示資料概覽（統計圖表）
     if st.checkbox("顯示資料概覽"):
         st.subheader("資料統計")
         if "系所名稱" in df.columns:
