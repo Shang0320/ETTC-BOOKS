@@ -96,7 +96,8 @@ else:
                 st.warning("沒有符合的搜尋結果")
     
     # 進階篩選功能（例如校院名稱、系所名稱、學位類別、論文出版年）
-    with st.expander("進階篩選"):
+    with st.expander("進階篩選", expanded=True):
+
         df_filtered = df.copy()
         col1, col2 = st.columns(2)
         with col1:
