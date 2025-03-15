@@ -11,7 +11,7 @@ st.set_page_config(page_title="教測中心圖書查詢系統", layout="wide")
 col1, col2 = st.columns([1,4])
 with col1:
     # 使用直接連結載入 LOGO 圖片，請確認圖片權限設為公開
-    st.image("https://drive.google.com/file/d/1l957k8q4yEQL9vxDPg18PVQQUjja-t2J/view?usp=sharing", width=120)
+    st.image("https://th.bing.com/th/id/OIP.9jKbLb2tJQxAcb_7avTrdAHaHa?rs=1&pid=ImgDetMain", width=120)
 with col2:
     st.title("海巡署教育訓練測考中心圖書查詢系統")
 
