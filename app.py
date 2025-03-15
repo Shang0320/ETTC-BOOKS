@@ -26,8 +26,8 @@ def load_data():
         client = gspread.authorize(credentials)
         
         # 直接硬編碼 Google Sheets URL（請根據您的試算表調整 URL）
-        spreadsheet_url = st.secrets["spreadsheet_url"] 
-        #spreadsheet_url = "https://docs.google.com/spreadsheets/d/1us_b4A3kGt6Vx8ZEstvDvReUEb-2Yd-7tAS7NBj5LVU/edit?gid=933535578#gid=933535578"
+        #spreadsheet_url = st.secrets["spreadsheet_url"] 
+        spreadsheet_url = "https://docs.google.com/spreadsheets/d/1R6OM-Mp9KES7FOKOgxlSseK9tfgPbBt3_moINKF8DAQ/edit?gid=933535578#gid=933535578"
         # 打開工作表（假設數據存放在 "sheet1" 工作表中）
         sheet = client.open_by_url(spreadsheet_url).worksheet("sheet1")
         
