@@ -4,12 +4,12 @@ import gspread
 from google.oauth2.service_account import Credentials
 from gspread_dataframe import get_as_dataframe
 
-# 設定頁面
+# 設定頁面標題和版面
 st.set_page_config(page_title="海事論文查詢系統", layout="wide")
 st.title("海事論文查詢系統")
 
-# 創建一個函數來讀取 Google Sheets 資料
-@st.cache_data(ttl=600)  # 快取資料 10 分鐘，確保不會頻繁請求
+# 定義函數從 Google Sheets 讀取資料
+@st.cache_data(ttl=600)  # 快取 10 分鐘
 def load_data():
     try:
         # 定義需要的權限範圍
@@ -17,172 +17,113 @@ def load_data():
             'https://www.googleapis.com/auth/spreadsheets',
             'https://www.googleapis.com/auth/drive'
         ]
-        
-        # 讀取憑證資訊
+        # 從 st.secrets 中讀取憑證資訊（請在 secrets.toml 中設定 gcp_service_account）
         credentials = Credentials.from_service_account_info(
-            st.secrets["gcp_service_account"],  # 從 Streamlit 的 secrets 管理中獲取
+            st.secrets["gcp_service_account"],
             scopes=scope
         )
-        
-        # 認證並建立客戶端
+        # 認證並建立 gspread 客戶端
         client = gspread.authorize(credentials)
         
-        # 打開工作表 - 使用工作表 URL 或名稱
-        spreadsheet_url = st.secrets["spreadsheet_url"]  # 從 Streamlit 的 secrets 管理中獲取
-        sheet = client.open_by_url(spreadsheet_url).worksheet("1")  # 假設你的數據在 "Sheet1" 工作表
+        # 直接硬編碼 Google Sheets URL（請根據您的試算表調整 URL）
+        spreadsheet_url = "https://docs.google.com/spreadsheets/d/1us_b4A3kGt6Vx8ZEstvDvReUEb-2Yd-7tAS7NBj5LVU/edit?usp=sharing"
+        # 打開工作表（假設數據存放在 "sheet1" 工作表中）
+        sheet = client.open_by_url(spreadsheet_url).worksheet("sheet1")
         
-        # 讀取資料為 DataFrame
+        # 讀取資料到 DataFrame
         df = get_as_dataframe(sheet, evaluate_formulas=True, skiprows=0)
-        
-        # 清理資料 - 移除空白列
         df = df.dropna(how='all')
         
-        # 確保數值列為正確的數值類型
+        # 將數值欄位轉換為數值類型（如畢業年度、論文出版年）
         if '畢業年度' in df.columns:
             df['畢業年度'] = pd.to_numeric(df['畢業年度'], errors='coerce')
         if '論文出版年' in df.columns:
             df['論文出版年'] = pd.to_numeric(df['論文出版年'], errors='coerce')
             
         return df
-    
     except Exception as e:
         st.error(f"讀取數據時發生錯誤: {e}")
-        return pd.DataFrame()  # 返回空的 DataFrame
+        return pd.DataFrame()
 
-# 顯示加載中提示
+# 顯示載入提示
 with st.spinner("正在從 Google Drive 讀取資料..."):
     df = load_data()
 
-# 檢查是否成功獲取了資料
+# 檢查是否成功獲取資料
 if df.empty:
     st.error("無法獲取資料，請檢查連接和權限設定。")
 else:
-    # 顯示總資料筆數
     st.success(f"已成功讀取 {len(df)} 筆資料")
     
-    # 創建搜尋功能
     st.header("搜尋功能")
     
-    # 創建三個搜尋選項
+    # 提供單一查詢方式：論文名稱、研究生、指導教授
     search_method = st.radio("選擇搜尋方式:", ["論文名稱", "研究生", "指導教授"])
     
-    # 根據選擇的搜尋方式顯示相應的搜尋框
     if search_method == "論文名稱":
-        # 取得所有論文名稱
-        titles = df["論文名稱"].dropna().unique().tolist()
-        titles.sort()  # 按字母順序排序
-        
-        # 創建關鍵字搜尋框
         search_input = st.text_input("輸入論文名稱關鍵字:")
         if search_input:
-            filtered_df = df[df["論文名稱"].str.contains(search_input, na=False)]
+            filtered_df = df[df["論文名稱"].str.contains(search_input, case=False, na=False)]
             st.write(f"搜尋結果: {len(filtered_df)} 筆")
             if not filtered_df.empty:
                 st.dataframe(filtered_df)
             else:
                 st.warning("沒有符合的搜尋結果")
-        
-        # 提供論文名稱的下拉選單
-        selected_title = st.selectbox("或選擇論文名稱:", [""] + titles)
-        if selected_title:
-            filtered_df = df[df["論文名稱"] == selected_title]
-            st.write(f"搜尋結果: {len(filtered_df)} 筆")
-            st.dataframe(filtered_df)
-    
     elif search_method == "研究生":
-        # 取得所有研究生
-        students = df["研究生"].dropna().unique().tolist()
-        students.sort()  # 按字母順序排序
-        
-        # 創建關鍵字搜尋框
         search_input = st.text_input("輸入研究生姓名關鍵字:")
         if search_input:
-            filtered_df = df[df["研究生"].str.contains(search_input, na=False)]
+            filtered_df = df[df["研究生"].str.contains(search_input, case=False, na=False)]
             st.write(f"搜尋結果: {len(filtered_df)} 筆")
             if not filtered_df.empty:
                 st.dataframe(filtered_df)
             else:
                 st.warning("沒有符合的搜尋結果")
-        
-        # 提供研究生的下拉選單
-        selected_student = st.selectbox("或選擇研究生:", [""] + students)
-        if selected_student:
-            filtered_df = df[df["研究生"] == selected_student]
-            st.write(f"搜尋結果: {len(filtered_df)} 筆")
-            st.dataframe(filtered_df)
-    
     else:  # 指導教授
-        # 取得所有指導教授
-        professors = df["指導教授"].dropna().unique().tolist()
-        professors.sort()  # 按字母順序排序
-        
-        # 創建關鍵字搜尋框
         search_input = st.text_input("輸入指導教授姓名關鍵字:")
         if search_input:
-            filtered_df = df[df["指導教授"].str.contains(search_input, na=False)]
+            filtered_df = df[df["指導教授"].str.contains(search_input, case=False, na=False)]
             st.write(f"搜尋結果: {len(filtered_df)} 筆")
             if not filtered_df.empty:
                 st.dataframe(filtered_df)
             else:
                 st.warning("沒有符合的搜尋結果")
-        
-        # 提供指導教授的下拉選單
-        selected_professor = st.selectbox("或選擇指導教授:", [""] + professors)
-        if selected_professor:
-            filtered_df = df[df["指導教授"] == selected_professor]
-            st.write(f"搜尋結果: {len(filtered_df)} 筆")
-            st.dataframe(filtered_df)
     
-    # 添加進階篩選功能
+    # 進階篩選功能（例如校院名稱、系所名稱、學位類別、論文出版年）
     with st.expander("進階篩選"):
+        df_filtered = df.copy()
         col1, col2 = st.columns(2)
-        
         with col1:
-            # 篩選學校
             if "校院名稱" in df.columns:
-                schools = df["校院名稱"].dropna().unique().tolist()
-                schools.sort()
-                selected_school = st.multiselect("選擇學校:", schools)
-                if selected_school:
-                    df = df[df["校院名稱"].isin(selected_school)]
-            
-            # 篩選系所
+                schools = sorted(df["校院名稱"].dropna().unique().tolist())
+                selected_schools = st.multiselect("選擇校院名稱:", schools)
+                if selected_schools:
+                    df_filtered = df_filtered[df_filtered["校院名稱"].isin(selected_schools)]
             if "系所名稱" in df.columns:
-                departments = df["系所名稱"].dropna().unique().tolist()
-                departments.sort()
-                selected_department = st.multiselect("選擇系所:", departments)
-                if selected_department:
-                    df = df[df["系所名稱"].isin(selected_department)]
-        
+                departments = sorted(df["系所名稱"].dropna().unique().tolist())
+                selected_departments = st.multiselect("選擇系所名稱:", departments)
+                if selected_departments:
+                    df_filtered = df_filtered[df_filtered["系所名稱"].isin(selected_departments)]
         with col2:
-            # 篩選學位類別
             if "學位類別" in df.columns:
-                degrees = df["學位類別"].dropna().unique().tolist()
-                selected_degree = st.multiselect("選擇學位類別:", degrees)
-                if selected_degree:
-                    df = df[df["學位類別"].isin(selected_degree)]
-            
-            # 篩選年份範圍
+                degrees = sorted(df["學位類別"].dropna().unique().tolist())
+                selected_degrees = st.multiselect("選擇學位類別:", degrees)
+                if selected_degrees:
+                    df_filtered = df_filtered[df_filtered["學位類別"].isin(selected_degrees)]
             if "論文出版年" in df.columns:
-                min_year = int(df["論文出版年"].min()) if not df.empty else 2000
-                max_year = int(df["論文出版年"].max()) if not df.empty else 2025
+                min_year = int(df["論文出版年"].min())
+                max_year = int(df["論文出版年"].max())
                 year_range = st.slider("論文出版年範圍:", min_year, max_year, (min_year, max_year))
-                df = df[(df["論文出版年"] >= year_range[0]) & (df["論文出版年"] <= year_range[1])]
+                df_filtered = df_filtered[(df_filtered["論文出版年"] >= year_range[0]) & (df_filtered["論文出版年"] <= year_range[1])]
         
-        # 顯示經過篩選的結果
-        st.write(f"符合條件的論文數量: {len(df)} 筆")
-        
-    # 顯示資料概覽
+        st.write(f"進階篩選後，共有 {len(df_filtered)} 筆論文")
+        st.dataframe(df_filtered)
+    
+    # 顯示其他資訊（例如統計圖表）
     if st.checkbox("顯示資料概覽"):
         st.subheader("資料統計")
-        
-        # 繪製圖表
-        st.subheader("各系所論文數量分布")
         if "系所名稱" in df.columns:
             dept_counts = df["系所名稱"].value_counts()
             st.bar_chart(dept_counts)
-        
-        st.subheader("論文出版年份分布")
         if "論文出版年" in df.columns:
             year_counts = df["論文出版年"].value_counts().sort_index()
             st.line_chart(year_counts)
