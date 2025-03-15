@@ -29,7 +29,7 @@ def load_data():
         #spreadsheet_url = st.secrets["spreadsheet_url"] 
         spreadsheet_url = "https://docs.google.com/spreadsheets/d/1R6OM-Mp9KES7FOKOgxlSseK9tfgPbBt3_moINKF8DAQ/edit?usp=sharing"
         # 打開工作表（假設數據存放在 "sheet1" 工作表中）
-        sheet = client.open_by_url(spreadsheet_url).worksheet("sheet1")
+        sheet = client.open_by_url(spreadsheet_url).worksheet("Sheet1")
         
         # 讀取資料到 DataFrame
         df = get_as_dataframe(sheet, evaluate_formulas=True, skiprows=0)
