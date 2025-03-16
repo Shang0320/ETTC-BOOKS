@@ -110,3 +110,4 @@ if df.empty:
     st.error("無法獲取資料，請檢查連接和權限設定。")
 else:
     st.success(f"已成功讀取 {len(df)} 筆資料")
+    st.dataframe(df)  # 確保數據顯示
