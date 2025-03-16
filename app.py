@@ -21,7 +21,7 @@ st.markdown(
         text-align: center;
     }
     .banner img {
-        height: 80px;
+        height: 120px;
         margin-right: 15px;
     }
     .banner-text {
