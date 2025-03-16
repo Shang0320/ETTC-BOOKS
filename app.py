@@ -4,59 +4,104 @@ import gspread
 from google.oauth2.service_account import Credentials
 from gspread_dataframe import get_as_dataframe
 
-# 設定頁面標題和版面
+# 設定頁面標題和版面，採用深色主題
 st.set_page_config(page_title="教測中心圖書查詢系統", layout="wide")
 
 # 利用 st.columns 將 LOGO 與標題並排
 col1, col2 = st.columns([1,4])
 with col1:
-    # 使用直接連結載入 LOGO 圖片，請確認圖片權限設為公開
-    st.image("https://th.bing.com/th/id/OIP.9jKbLb2tJQxAcb_7avTrdAHaHa?rs=1&pid=ImgDetMain", width=120)
+    # 請確認圖片權限為公開，這裡使用一個示意圖片網址
+    st.image("https://th.bing.com/th/id/OIP.9jKbLb2tJQxAcb_7avTrdAHaHa?rs=1", width=120)
 with col2:
-    st.title("海巡署教育訓練測考中心圖書查詢系統")
+    st.markdown("<h1 style='color:#FFEB3B;'>海巡署教育訓練測考中心圖書查詢系統</h1>", unsafe_allow_html=True)
 
 # 定義函數從 Google Sheets 讀取資料
 @st.cache_data(ttl=600)  # 快取 10 分鐘
 def load_data():
     try:
-        # 定義需要的權限範圍
         scope = [
             'https://www.googleapis.com/auth/spreadsheets',
             'https://www.googleapis.com/auth/drive'
         ]
-        # 從 st.secrets 中讀取憑證資訊（請在 secrets.toml 中設定 gcp_service_account）
         credentials = Credentials.from_service_account_info(
             st.secrets["gcp_service_account"],
             scopes=scope
         )
-        # 認證並建立 gspread 客戶端
         client = gspread.authorize(credentials)
-        
-        # 直接硬編碼 Google Sheets URL（請根據您的試算表調整 URL）
+        # 直接硬編碼 Google Sheets URL
         spreadsheet_url = "https://docs.google.com/spreadsheets/d/1R6OM-Mp9KES7FOKOgxlSseK9tfgPbBt3_moINKF8DAQ/edit?usp=sharing"
-        # 打開工作表（假設數據存放在 "Sheet1" 工作表中）
         sheet = client.open_by_url(spreadsheet_url).worksheet("Sheet1")
-        
-        # 讀取資料到 DataFrame
         df = get_as_dataframe(sheet, evaluate_formulas=True, skiprows=0)
         df = df.dropna(how='all')
-        
-        # 將數值欄位轉換為數值類型（如畢業年度、論文出版年）
         if '畢業年度' in df.columns:
             df['畢業年度'] = pd.to_numeric(df['畢業年度'], errors='coerce')
         if '論文出版年' in df.columns:
             df['論文出版年'] = pd.to_numeric(df['論文出版年'], errors='coerce')
-            
         return df
     except Exception as e:
         st.error(f"讀取數據時發生錯誤: {e}")
         return pd.DataFrame()
 
-# 顯示載入提示
+# 載入資料
 with st.spinner("正在從 Google Drive 讀取資料..."):
     df = load_data()
 
-# 檢查是否成功獲取資料
+# 自定義 CSS，呈現高對比度、華麗的介面
+st.markdown("""
+    <style>
+    /* 整體背景與文字 */
+    body {
+        background-color: #121212;
+        color: #E0E0E0;
+    }
+    .stButton>button {
+        background-color: #FF5722;
+        color: #FFFFFF;
+        border: none;
+        padding: 0.5em 1em;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+    }
+    .stButton>button:hover {
+        background-color: #E64A19;
+    }
+    /* 標題 */
+    h1, h2, h3 {
+        color: #FFEB3B;
+    }
+    /* 資料表 */
+    .css-1oe6wy3 {
+        background-color: #1E1E1E !important;
+    }
+    table {
+        background-color: #1E1E1E;
+        border: 1px solid #424242;
+    }
+    th {
+        background-color: #FF9800;
+        color: #000000;
+        font-weight: bold;
+    }
+    td {
+        border: 1px solid #424242;
+    }
+    tr:nth-child(even) {
+        background-color: #2C2C2C;
+    }
+    tr:hover {
+        background-color: #424242;
+    }
+    /* 搜尋區塊 */
+    .stTextInput>div>div>input {
+        background-color: #1E1E1E;
+        color: #E0E0E0;
+        border: 1px solid #424242;
+        border-radius: 8px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 if df.empty:
     st.error("無法獲取資料，請檢查連接和權限設定。")
 else:
@@ -64,7 +109,7 @@ else:
     
     st.header("搜尋功能")
     
-    # 提供單一查詢方式：論文名稱、研究生、指導教授
+    # 單一查詢方式
     search_method = st.radio("選擇搜尋方式:", ["論文名稱", "研究生", "指導教授"])
     
     if search_method == "論文名稱":
@@ -95,9 +140,8 @@ else:
             else:
                 st.warning("沒有符合的搜尋結果")
     
-    # 進階篩選功能（例如校院名稱、系所名稱、學位類別、論文出版年）
+    # 進階篩選，預設展開
     with st.expander("進階篩選", expanded=True):
-
         df_filtered = df.copy()
         col1, col2 = st.columns(2)
         with col1:
@@ -126,7 +170,7 @@ else:
         st.write(f"進階篩選後，共有 {len(df_filtered)} 筆論文")
         st.dataframe(df_filtered)
     
-    # 顯示資料概覽（統計圖表）
+    # 資料概覽與統計圖表
     if st.checkbox("顯示資料概覽"):
         st.subheader("資料統計")
         if "系所名稱" in df.columns:
