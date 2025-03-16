@@ -39,8 +39,8 @@ st.markdown(
     <div class="banner">
         <img src="https://raw.githubusercontent.com/Shang0320/ETTC-BOOKS/5fc5be38bc2139df7395a027679bd45248ba4b8f/ettclogo.png">
         <h1>海巡署教育訓練測考中心圖書查詢系統</h1>
+        <h1>Coast Guard Administration Education and Training Testing Center Library Query System</h1>
     </div>
-    <div class="sub-title">Coast Guard Administration Education and Training Testing Center Library Query System</div>
     """,
     unsafe_allow_html=True
 )
