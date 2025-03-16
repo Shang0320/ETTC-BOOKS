@@ -52,7 +52,7 @@ st.markdown(
 # 利用 st.columns 將 LOGO 與標題並排
 col1, col2 = st.columns([1, 4])
 with col1:
-    st.image("https://drive.google.com/uc?id=1l957k8q4yEQL9vxDPg18PVQQUjja-t2J", width=120)
+    st.image("https://github.com/Shang0320/ETTC-BOOKS/blob/5fc5be38bc2139df7395a027679bd45248ba4b8f/ettclogo.png", width=120)
 with col2:
     st.markdown('<div class="title">海巡署教育訓練測考中心圖書查詢系統</div>', unsafe_allow_html=True)
 
